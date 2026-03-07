@@ -1,0 +1,12 @@
+# 忽略虚拟环境
+venv/
+.env
+
+# 忽略数据集 (保护数据隐私且文件太大)
+data/
+*.csv
+*.xlsx
+
+# 忽略 PyCharm 的配置文件
+.idea/
+__pycache__/
