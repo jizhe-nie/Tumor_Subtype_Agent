@@ -42,6 +42,20 @@ def run_tumor_agent(user_query: str):
 
 
 if __name__ == "__main__":
-    query = "请用你所有的技能，帮我把 '../data/dummy_tcga_expression.csv' 这个包含500个基因的数据，先降维，再分成 3 个亚型。"
-    final_answer = run_tumor_agent(query)
-    print("\n🤖 [Agent 最终回复]:\n", final_answer)
+    # 终极测试：下达五连招指令！
+    query = """
+    这是最新的 TCGA BRCA 原始数据 '../data/tcga_brca_expr.tsv'。
+    请帮我走一遍极其严谨的科学发现流水线：
+    1. 清洗数据。
+    2. PCA 降维到 20 维。
+    3. 调用【权威一致性聚类 (R语言版)】评估最优的 k 值。
+    4. 获取到最优的 k 后，调用 K-Means 工具进行最终聚类。
+    5. 调用【可视化工具】画出最终聚类散点图。
+    处理完后，请告诉我 R 语言生成的图表和你的散点图分别存在哪里了，并做个精简的总结。
+    """
+
+    try:
+        final_answer = run_tumor_agent(query)
+        print("\n🤖 [Agent 最终回复]:\n", final_answer)
+    except Exception as e:
+        print(f"\n❌ 运行出错: {e}")

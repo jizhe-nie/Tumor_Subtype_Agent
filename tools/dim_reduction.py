@@ -2,13 +2,13 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import os
-from langchain_core.tools import tool  # 🌟 引入 tool 装饰器
+from langchain_core.tools import tool
 
 
 @tool
 def pca_reduction_tool(data_path: str, n_components: int) -> str:
     """
-    当你面临高维基因数据（如几百上千个基因），需要先进行特征降维时，请务必先调用此工具。
+    当你面临高维基因数据，需要先进行特征降维时，请务必先调用此工具。
     参数：
     - data_path: 原始基因表达数据的 CSV 文件路径。
     - n_components: 目标维度（通常设定在 10 到 50 之间）。
@@ -17,10 +17,16 @@ def pca_reduction_tool(data_path: str, n_components: int) -> str:
     print(f"📉 [Tool调用] 正在对数据进行 PCA 降维: {data_path} (目标维度={n_components})...")
 
     if not os.path.exists(data_path):
-        return f"执行失败：找不到数据文件 {data_path}，请检查路径。"
+        return f"⚠️ 错误：找不到数据文件 '{data_path}'。请核对路径并重试。"
 
     try:
         df = pd.read_csv(data_path, index_col=0)
+
+        # 【容错】：PCA 的目标维度不能超过样本数量和特征数量中的最小值
+        max_components = min(df.shape[0], df.shape[1])
+        if n_components > max_components:
+            return f"⚠️ 错误：目标维度 ({n_components}) 超过了数据的最大允许维度 ({max_components})。请你自动把 n_components 降低到 {max_components} 以下并重试！"
+
         if df.shape[1] <= n_components:
             return f"无需降维：原始数据的特征数 ({df.shape[1]}) 已经小于或等于目标维度 ({n_components})。"
 
@@ -47,4 +53,4 @@ def pca_reduction_tool(data_path: str, n_components: int) -> str:
         )
         return result_msg
     except Exception as e:
-        return f"执行降维过程中发生错误: {str(e)}"
+        return f"⚠️ 执行降维发生错误: {str(e)}"

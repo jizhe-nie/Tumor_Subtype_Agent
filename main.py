@@ -30,13 +30,36 @@ def generate_dummy_tcga_data(file_path, num_samples=150, num_genes=500):
     print(f"数据已成功保存至: {file_path}")
 
 
+# if __name__ == "__main__":
+#     # 确保 data 文件夹存在
+#     os.makedirs("data", exist_ok=True)
+#
+#     # 生成测试数据集
+#     data_file = "data/dummy_tcga_expression.csv"
+#     if not os.path.exists(data_file):
+#         generate_dummy_tcga_data(data_file)
+#     else:
+#         print("测试数据已存在，准备进入下一步开发！")
+
 if __name__ == "__main__":
-    # 确保 data 文件夹存在
     os.makedirs("data", exist_ok=True)
 
-    # 生成测试数据集
-    data_file = "data/dummy_tcga_expression.csv"
-    if not os.path.exists(data_file):
-        generate_dummy_tcga_data(data_file)
-    else:
-        print("测试数据已存在，准备进入下一步开发！")
+    # 我们生成一份“方向颠倒（行是基因，列是样本）”并且带有 NaN 的脏数据
+    dirty_data_file = "data/raw_tcga_dirty.csv"
+
+    print("正在生成模拟的 TCGA 原始脏数据...")
+    np.random.seed(42)
+    # 模拟 1000 个基因, 120 个样本
+    raw_matrix = np.random.normal(loc=5.0, scale=2.0, size=(1000, 120))
+
+    # 随机加入一些缺失值 NaN (模拟未检出)
+    mask = np.random.choice([True, False], size=raw_matrix.shape, p=[0.05, 0.95])
+    raw_matrix[mask] = np.nan
+
+    # 生成 DataFrame：注意这里 index 是基因，columns 是样本（这是生信常见格式）
+    genes = [f"Gene_{i + 1}" for i in range(1000)]
+    samples = [f"Patient_{i + 1}" for i in range(120)]
+    df_dirty = pd.DataFrame(raw_matrix, index=genes, columns=samples)
+
+    df_dirty.to_csv(dirty_data_file)
+    print(f"脏数据已生成并保存至: {dirty_data_file}")
