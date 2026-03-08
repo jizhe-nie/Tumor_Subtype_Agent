@@ -9,43 +9,52 @@ from langchain_core.tools import tool
 @tool
 def kmeans_clustering_tool(data_path: str, n_clusters: int) -> str:
     """
-    当你需要对基因表达数据进行聚类分析（寻找肿瘤亚型）时使用此工具。
+    当你需要对数据进行最终的聚类分析，并获取每个样本的亚型归属名单时调用此工具。
     参数：
-    - data_path: 数据的 CSV 文件路径。
-    - n_clusters: 期望寻找的亚型数量（正整数，通常在 2 到 10 之间）。
-    返回包含数据概况、轮廓系数评估以及各亚型样本分布的文本报告。
+    - data_path: 降维后或清洗后的 CSV 数据文件路径。
+    - n_clusters: 期望寻找的亚型数量（k 值）。
+    返回：包含评估指标以及【样本聚类标签文件】保存路径的报告。
     """
-    print(f"🔧 [Tool调用] 正在使用 K-Means 算法处理数据: {data_path} (k={n_clusters})...")
+    print(f"🔧 [Tool调用] 正在执行 K-Means 聚类并保存样本名单 (k={n_clusters})...")
 
-    # 【容错 1】：路径检查
     if not os.path.exists(data_path):
-        return f"⚠️ 错误：找不到文件 '{data_path}'。请你检查路径是否拼写错误，或者重新询问用户正确的文件路径。"
-
-    # 【容错 2】：参数逻辑检查 (K-Means 至少需要分成 2 类)
-    if n_clusters < 2:
-        return f"⚠️ 错误：传入的 n_clusters={n_clusters} 不合法。K-Means 聚类的簇数必须大于等于 2。请你自动将 k 调整为合理的数值（如 2 或 3）并重试。"
+        return f"⚠️ 错误：找不到文件 '{data_path}'。"
 
     try:
         df = pd.read_csv(data_path, index_col=0)
 
-        # 【容错 3】：样本量检查
-        if n_clusters >= len(df):
-            return f"⚠️ 错误：设定的亚型数量 ({n_clusters}) 不能大于或等于样本总数 ({len(df)})。请减小 k 值后重试。"
-
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         cluster_labels = kmeans.fit_predict(df)
         score = silhouette_score(df, cluster_labels)
+
+        # 统计分布
         unique, counts = np.unique(cluster_labels, return_counts=True)
         cluster_distribution = dict(zip([f"亚型_{i + 1}" for i in unique], counts))
 
+        # 🌟 核心升级：保存具体的样本分类名单
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        data_dir = os.path.dirname(os.path.abspath(data_path))
+        dataset_name = os.path.basename(data_dir)
+        if dataset_name == "data":
+            dataset_name = os.path.basename(data_path).replace("pca_", "").replace("clean_", "").split(".")[0]
+
+        output_dir = os.path.join(project_root, "output", dataset_name)
+        os.makedirs(output_dir, exist_ok=True)
+
+        # 生成标签 DataFrame 并保存
+        labels_df = pd.DataFrame({
+            "Sample_ID": df.index,
+            "Subtype": [f"Subtype_{i + 1}" for i in cluster_labels]
+        })
+        labels_file_path = os.path.join(output_dir, f"cluster_labels_k{n_clusters}.csv")
+        labels_df.to_csv(labels_file_path, index=False)
+
         result_msg = (
             f"✅ K-Means 聚类执行成功！\n"
-            f"📊 数据概况: 包含 {df.shape[0]} 个样本, {df.shape[1]} 个特征。\n"
-            f"🔍 设定的亚型数量 (k): {n_clusters}\n"
-            f"⭐ 轮廓系数 (Silhouette Score): {score:.4f}\n"
-            f"👥 各亚型样本分布: {cluster_distribution}\n"
+            f"⭐ 轮廓系数: {score:.4f} | 👥 分布: {cluster_distribution}\n"
+            f"💾 **聚类标签名单已保存至**: '{labels_file_path}'。\n"
+            f"提示：如果后续需要做差异表达分析 (DEG)，请将清洗后的原始高维数据路径和此标签名单路径一起传给 DEG 工具。"
         )
         return result_msg
     except Exception as e:
-        # 【容错 4】：未知错误反馈
-        return f"⚠️ 执行过程中发生未知计算错误: {str(e)}。请你思考可能的原因，并向用户解释。"
+        return f"⚠️ 聚类执行发生错误: {str(e)}"
