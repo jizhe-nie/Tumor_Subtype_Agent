@@ -17,6 +17,8 @@
 - **多会话 Web UI 彻底修复**：解决了 Streamlit 生命周期陷阱导致的 st.rerun() 无限重启和吞字问题，实现了流畅的多对话主题管理。
 - **多模型 API 动态配置与持久化**：在前端侧边栏新增模型“引擎舱”，支持动态切换国内外主流模型（Qwen, DeepSeek, GLM, Kimi, GPT-4o），并通过本地 api_config.json 实现配置的永久保存。
 - **流式输出与“内心独白” (Streaming Monologue)**：重构了前端的渲染逻辑，使用 st.status 折叠框实时捕获并展示 Agent 的思考过程（💭 AI 思考）和工具调用状态，极大提升了用户等待体验。
+- **对话历史持久化与主题优化**：对话历史落盘保存，重启后自动恢复；主题基于 AI 对首问的理解生成并过滤系统提示文本。
+- **Rscript 跨平台自动定位**：`test_r_bridge.py` 支持 macOS/Windows 自动查找 Rscript，支持 `RSCRIPT_PATH` 环境变量覆盖。
 - **“智能体外脑”物理架构 (agent_brain/)**：建立了独立的 Markdown 文件集，分别管控 Agent 的性格（SOUL.md）、操作规程（AGENTS.md）、历史经验（MEMORY.md）和用户画像（USER.md）。
 - **上下文读取引擎 (context_manager.py)**：实现了 70/20 比例的安全截断算法，确保外脑文件内容被安全、完整地注入到大模型的 System Prompt 中。
 - **Agent 自我进化工具 (update_agent_brain_tool.py)**：赋予 Agent 修改自身记忆的写权限。Agent 能够在分析中主动提炼价值信息，并以 Append 模式带时间戳地写入对应的大脑分区。
