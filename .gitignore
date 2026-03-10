@@ -13,3 +13,6 @@ __pycache__/
 
 # 忽略输出
 output/
+
+# 忽略 API 密钥本地缓存
+agent_brain/api_config.json
