@@ -16,3 +16,9 @@ output/
 
 # 忽略 API 密钥本地缓存
 agent_brain/api_config.json
+
+# macOS
+.DS_Store
+
+# 本地对话历史
+agent_brain/chat_history.json
