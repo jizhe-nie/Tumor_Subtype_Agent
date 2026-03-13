@@ -1,6 +1,7 @@
 import os
-import subprocess
 from langchain_core.tools import tool
+from tools.r_utils import run_r_script
+from tools.tool_utils import safe_path
 
 
 @tool
@@ -30,8 +31,8 @@ def consensus_clustering_tool(data_path: str, max_k: int = 6) -> str:
         os.makedirs(output_dir, exist_ok=True)
 
         # 2. 转换路径格式（防止 R 语言在 Windows 下遇到 \ 会报错）
-        safe_data_path = os.path.abspath(data_path).replace('\\', '/')
-        safe_output_dir = os.path.abspath(output_dir).replace('\\', '/')
+        safe_data_path = safe_path(data_path)
+        safe_output_dir = safe_path(output_dir)
 
         # 3. 编写注入给 R 的执行脚本代码 (加入计算最优 k 值的 PAC 算法)
         r_code = f"""
@@ -69,25 +70,16 @@ def consensus_clustering_tool(data_path: str, max_k: int = 6) -> str:
         cat(sprintf("\\n===R_OUTPUT_OPTIMAL_K:%d===\\n", best_k))
         """
 
-        # 4. 将代码保存为临时的 .R 文件
+        # 4. 运行 R 脚本
         r_script_path = os.path.join(output_dir, "run_consensus.R")
-        with open(r_script_path, "w", encoding="utf-8") as f:
-            f.write(r_code)
-
-        # 🌟 此处使用我们测试跑通的绝对路径！
-        rscript_path = r"C:\Program Files\R\R-4.5.2\bin\Rscript.exe"
-
         print("   - R 语言引擎正在进行高强度计算与画图，请耐心等待 (约需 10-30 秒)...")
-        result = subprocess.run(
-            [rscript_path, r_script_path],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        ok, out = run_r_script(r_code, r_script_path, timeout_sec=600)
+        if not ok:
+            return f"⚠️ R 脚本运行失败，错误信息:\n{out}"
 
         # 5. 从 R 的输出中解析出最优的 K 值
         best_k = None
-        for line in result.stdout.split('\n'):
+        for line in out.split('\n'):
             if "===R_OUTPUT_OPTIMAL_K:" in line:
                 best_k = line.split(":")[1].replace("===", "").strip()
 
@@ -99,7 +91,5 @@ def consensus_clustering_tool(data_path: str, max_k: int = 6) -> str:
         )
         return msg
 
-    except subprocess.CalledProcessError as e:
-        return f"⚠️ R 脚本运行失败，错误信息:\n{e.stderr}"
     except Exception as e:
         return f"⚠️ 一致性聚类执行发生错误: {str(e)}"
