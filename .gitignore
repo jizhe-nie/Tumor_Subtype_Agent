@@ -22,3 +22,6 @@ agent_brain/api_config.json
 
 # 本地对话历史
 agent_brain/chat_history.json
+
+# Papers (keep local)
+paper/
