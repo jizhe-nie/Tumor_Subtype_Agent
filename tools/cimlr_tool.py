@@ -35,15 +35,22 @@ def cimlr_tool(
     data_list = "list(" + ", ".join(vars_list) + ")"
 
     r_code = f"""
-    suppressPackageStartupMessages(library(CIMLR))
-
     {os.linesep.join(data_lines)}
     data.list <- {data_list}
 
-    fit <- CIMLR(data.list, c={n_clusters}, cores.ratio={cores_ratio})
-    clusters <- fit$y$cluster
-    sample_ids <- rownames(data.list[[1]])
+    if (requireNamespace("CIMLR", quietly=TRUE)) {{
+        suppressPackageStartupMessages(library(CIMLR))
+        fit <- CIMLR(data.list, c={n_clusters}, cores.ratio={cores_ratio})
+        clusters <- fit$y$cluster
+    }} else if (requireNamespace("MOFSR", quietly=TRUE)) {{
+        suppressPackageStartupMessages(library(MOFSR))
+        fit <- MOFSR::CIMLR(data.list, c={n_clusters}, cores.ratio={cores_ratio})
+        clusters <- fit$y$cluster
+    }} else {{
+        stop("CIMLR/MOFSR not installed")
+    }}
 
+    sample_ids <- rownames(data.list[[1]])
     labels <- data.frame(Sample_ID=sample_ids, Subtype=paste0("Subtype_", clusters))
     write.csv(labels, file="{safe_path(labels_path)}", row.names=FALSE)
     cat(sprintf("\\n===R_OUTPUT_LABELS:{safe_path(labels_path)}===\\n"))

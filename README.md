@@ -20,6 +20,8 @@
 - **对话历史持久化与主题优化**：对话历史落盘保存，重启后自动恢复；主题基于 AI 对首问的理解生成并过滤系统提示文本。
 - **Rscript 跨平台自动定位**：`test_r_bridge.py` 支持 macOS/Windows 自动查找 Rscript，支持 `RSCRIPT_PATH` 环境变量覆盖。
 - **PyTorch 深度聚类工具**：新增 IDEC 与 scDeepCluster 的 PyTorch 可运行实现（自编码器预训练 + DEC 微调）。
+- **数据集自动化准备**：新增 GEO 批量下载与解析脚本，生成可直接用于聚类的矩阵格式。
+- **TCGA 多组学对齐**：表达与甲基化数据完成样本交集对齐，产出 SNF 可用输入。
 - **“智能体外脑”物理架构 (agent_brain/)**：建立了独立的 Markdown 文件集，分别管控 Agent 的性格（SOUL.md）、操作规程（AGENTS.md）、历史经验（MEMORY.md）和用户画像（USER.md）。
 - **上下文读取引擎 (context_manager.py)**：实现了 70/20 比例的安全截断算法，确保外脑文件内容被安全、完整地注入到大模型的 System Prompt 中。
 - **Agent 自我进化工具 (update_agent_brain_tool.py)**：赋予 Agent 修改自身记忆的写权限。Agent 能够在分析中主动提炼价值信息，并以 Append 模式带时间戳地写入对应的大脑分区。
@@ -38,6 +40,8 @@ Tumor_Subtype_Agent/
 │   ├── update_agent_brain_tool.py # [新增] 记忆刻刀：用于更新外脑文件
 │   ├── snf_clustering_tool.py  # SNF 多组学融合聚类
 │   ├── generate_report_tool.py # 实体报告生成器
+│   ├── prepare_test_datasets.py # GEO/METABRIC/CCLE 数据准备脚本
+│   ├── download_geo_series.py  # GEO 单系列下载脚本
 │   └── ... 
 ├── agent/
 │   ├── tumor_agent.py          # 核心大脑入口：封装工厂函数
@@ -53,6 +57,7 @@ Tumor_Subtype_Agent/
 - **无关系型数据库**：本项目采用极简的 **文件系统即数据库 (File-system as DB)** 架构。
 - **配置持久化**：`agent_brain/api_config.json` 采用 JSON 格式，包含 `api_key`, `api_base`, `model_name`, `provider` 字段。
 - **记忆持久化**：`agent_brain/*.md` 文件。写入采用追加模式（append），格式统一为 `\n\n> [时间戳] 记忆追加:\n具体内容`。
+- **数据落盘**：GEO 原始文件在 `data/geo_raw`，处理后矩阵在 `data/geo_processed`；外部公开数据在 `data/external/*`。
 
 ## 5. API 接口定义
 
@@ -71,13 +76,22 @@ streamlit
 pandas
 numpy
 torch
+GEOparse
 ```
+
+**R 依赖（用于多组学与一致性聚类）**：
+- ConsensusClusterPlus
+- iCluster
+- iClusterPlus
+- PINSPlus
+- MOFSR (CIMLR 备用实现)
 
 ## 7. 当前待办事项（TODO）
 
 - [ ] **高优**：搭建安全代码沙盒 (Sandbox)。为 `create_new_skill_tool` 加上基于子进程（subprocess）的预编译与黑盒测试，拦截语法错误，彻底解决 Agent 乱写代码导致系统崩溃的隐患。
 - [ ] **中优**：开发数据探勘工具 (`data_profiler_tool`)。让 Agent 在分析前能通过专用工具“偷看”数据的行列数和表头，代替盲目猜测。
 - [ ] **低优**：社交媒体网关。编写基于 Flask/FastAPI 的 Webhook，对接微信或企业微信机器人。
+- [ ] **低优**：补齐 CCLE / ICGC 下载（需要稳定下载源或访问凭证）。
 
 ## 8. 遇到的挑战与解决方案
 

@@ -9,6 +9,7 @@ torch>=2.0.0
 # 可视化 (稍后用于绘制聚类散点图和评估图)
 matplotlib>=3.7.0
 seaborn>=0.12.0
+GEOparse>=2.0.4
 
 # LangChain 基础库 (为稍后的 Agent 框架做准备)
 langchain>=0.1.0
