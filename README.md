@@ -22,6 +22,8 @@
 - **PyTorch 深度聚类工具**：新增 IDEC 与 scDeepCluster 的 PyTorch 可运行实现（自编码器预训练 + DEC 微调）。
 - **数据集自动化准备**：新增 GEO 批量下载与解析脚本，生成可直接用于聚类的矩阵格式。
 - **TCGA 多组学对齐**：表达与甲基化数据完成样本交集对齐，产出 SNF 可用输入。
+- **多 Agent 协作模式**：主控 Lead 与 Coder 分工，主控只负责分析与报告，代码类任务统一委托 Coder 执行。
+- **沙盒执行器**：新增 `sandbox_execution_tool`，为 Coder 提供受控的 Python 执行环境。
 - **“智能体外脑”物理架构 (agent_brain/)**：建立了独立的 Markdown 文件集，分别管控 Agent 的性格（SOUL.md）、操作规程（AGENTS.md）、历史经验（MEMORY.md）和用户画像（USER.md）。
 - **上下文读取引擎 (context_manager.py)**：实现了 70/20 比例的安全截断算法，确保外脑文件内容被安全、完整地注入到大模型的 System Prompt 中。
 - **Agent 自我进化工具 (update_agent_brain_tool.py)**：赋予 Agent 修改自身记忆的写权限。Agent 能够在分析中主动提炼价值信息，并以 Append 模式带时间戳地写入对应的大脑分区。
@@ -42,6 +44,8 @@ Tumor_Subtype_Agent/
 │   ├── generate_report_tool.py # 实体报告生成器
 │   ├── prepare_test_datasets.py # GEO/METABRIC/CCLE 数据准备脚本
 │   ├── download_geo_series.py  # GEO 单系列下载脚本
+│   ├── delegate_to_coder_tool.py # 主控委托 Coder 执行代码任务
+│   ├── sandbox_execution_tool.py # Coder 沙盒执行器
 │   └── ... 
 ├── agent/
 │   ├── tumor_agent.py          # 核心大脑入口：封装工厂函数

@@ -25,3 +25,6 @@ agent_brain/chat_history.json
 
 # Papers (keep local)
 paper/
+
+# Local sandbox workspace
+workspace/
